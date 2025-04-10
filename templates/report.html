@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Report - Social Media OSINT Analyser{% endblock %}
+
+{% block content %}
+<section>
+    <hgroup>
+        <h1>Analysis Report</h1>
+        <h2>Query: "{{ query }}"</h2>
+    </hgroup>
+
+    
+    {# Inside report.html, below the report content #}
+    {% if report_markdown %}
+    <details>
+        <summary>View/Copy Raw Markdown</summary>
+        <pre><code id="report-markdown-content">{{ report_markdown }}</code></pre>
+        <button id="copy-markdown-btn">Copy Markdown</button>
+    </details>
+
+    <script>
+        const copyButton = document.getElementById('copy-markdown-btn');
+        const markdownContent = document.getElementById('report-markdown-content');
+
+        if (copyButton && markdownContent) {
+            copyButton.addEventListener('click', () => {
+                navigator.clipboard.writeText(markdownContent.textContent)
+                    .then(() => {
+                        copyButton.textContent = 'Copied!';
+                        setTimeout(() => { copyButton.textContent = 'Copy Markdown'; }, 2000); // Reset after 2s
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy text: ', err);
+                        copyButton.textContent = 'Copy Failed';
+                        setTimeout(() => { copyButton.textContent = 'Copy Markdown'; }, 2000);
+                    });
+            });
+        }
+    </script>
+    <form action="{{ url_for('download_report') }}" method="post" style="display: inline-block; margin-left: 1em;">
+        <input type="hidden" name="report_markdown" value="{{ report_markdown }}">
+         <input type="hidden" name="query" value="{{ query }}">
+        <button type="submit">Download Report (.md)</button>
+    </form>
+   {% endif %}
+
+    <a href="{{ url_for('index') }}" role="button" class="secondary">Start New Analysis</a>
+    {# Add download button here if implementing #}
+
+</section>
+{% endblock %}

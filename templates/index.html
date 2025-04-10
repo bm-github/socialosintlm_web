@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}New Analysis - Social Media OSINT Analyser{% endblock %}
+
+{% block content %}
+<section>
+    <hgroup>
+        <h1>Social Media OSINT Analysis</h1>
+        <h2>Enter target usernames and your analysis query below.</h2>
+    </hgroup>
+
+    <form method="post" id="analysis-form">
+        <fieldset>
+            <legend>Target Profiles</legend>
+            {% if available_platforms %}
+                {% for platform in available_platforms %}
+                <label for="{{ platform }}_usernames">
+                    {{ platform.capitalize() }} Username(s)
+                    <input type="text"
+                           id="{{ platform }}_usernames"
+                           name="{{ platform }}_usernames"
+                           placeholder="e.g., user1, another_user (comma-separated)">
+                     {% if platform == 'twitter' %}
+                           <small>Enter handle without '@' symbol.</small>
+                     {% elif platform == 'reddit' %}
+                            <small>Enter username without 'u/'.</small>
+                     {% elif platform == 'bluesky' %}
+                            <small>Enter full handle like 'example.bsky.social'.</small>
+                     {% endif %}
+                </label>
+                {% endfor %}
+            {% else %}
+                <p>No platforms seem to be configured correctly. Check API keys and logs.</p>
+            {% endif %}
+        </fieldset>
+
+        <label for="query">
+            Analysis Query
+            <textarea id="query" name="query" rows="5" placeholder="What specific information are you looking for? (e.g., 'Identify main topics discussed', 'Look for location clues in text and images')" required></textarea>
+        </label>
+
+        <fieldset>
+             <label for="save_report">
+                <input type="checkbox" id="save_report" name="save_report">
+                Auto-save analysis report to data/outputs/
+            </label>
+        </fieldset>
+
+        <button type="submit" id="submit-button" {% if not available_platforms %}disabled{% endif %}>Run Analysis</button>
+    </form>
+</section>
+<script>
+    const form = document.getElementById('analysis-form');
+    const submitButton = document.getElementById('submit-button');
+
+    if (form && submitButton) {
+        form.addEventListener('submit', function() {
+            // Disable the button immediately
+            submitButton.disabled = true;
+            // Change text to give feedback
+            submitButton.textContent = 'Analysing... Please Wait';
+            // Optional: Add a loading class for spinner styling later
+            // submitButton.classList.add('loading');
+        });
+    }
+</script>
+{% endblock %}
