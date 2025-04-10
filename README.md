@@ -104,8 +104,8 @@ flowchart TD
 ### Steps
 1.  **Clone the repository (if you haven't already):**
     ```bash
-    git clone https://github.com/bm-github/SocialOSINTLM.git
-    cd SocialOSINTLM
+    git clone https://github.com/bm-github/socialosintlm_web.git
+    cd socialosintlm_web
     ```
 2.  **Install dependencies:**
     ```bash
