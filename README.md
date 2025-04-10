@@ -5,103 +5,96 @@
 ## 🌟 Key Features
 
 ✅ **Web-Based UI:** Interact with the tool easily through a clean web interface (Flask + Pico.css).
+
 ✅ **Multi-Platform Data Collection:** Aggregates data from Twitter/X, Reddit, Hacker News (via Algolia API), and Bluesky.
+
 ✅ **AI-Powered Analysis:** Utilises configurable models via the OpenRouter API for sophisticated text and image analysis.
+
 ✅ **Structured AI Prompts:** Employs detailed system prompts for objective, evidence-based analysis focusing on behavior, semantics, interests, and communication style.
+
 ✅ **Vision-Capable Image Analysis:** Analyses downloaded images (`JPEG, PNG, GIF, WEBP`) for OSINT insights using a vision-enabled LLM, focusing on objective details.
+
 ✅ **Efficient Media Handling:** Backend downloads media, stores it locally, handles platform-specific authentication, processes Reddit galleries, and resizes large images (max 1536x1536) for analysis.
+
 ✅ **Cross-Account Comparison:** Analyse profiles across multiple selected platforms simultaneously via the web form.
+
 ✅ **Intelligent Rate Limit Handling:** Backend detects API rate limits, provides informative feedback via flash messages in the UI, and prevents excessive requests. Raises `RateLimitExceededError` internally.
+
 ✅ **Robust Caching System:** Caches fetched data for 24 hours (`data/cache/`) to reduce API calls and speed up subsequent analyses via the web interface. Media files are cached in `data/media/`.
+
 ✅ **Browser Results:** Analysis results are rendered directly in the browser as formatted HTML.
+
 ✅ **Optional Report Saving:** Choose to automatically save detailed Markdown reports (`data/outputs/`).
+
 ✅ **Downloadable Reports:** Download generated Markdown reports directly from the results page.
+
 ✅ **Configurable Fetch Limits:** Backend fetches a defined number of recent items per platform to balance depth and API usage.
+
 ✅ **Detailed Logging:** Logs errors and operational details to `analyser_web.log` (web interface) and `analyser.log` (core library).
+
 ✅ **Environment Variable Configuration:** Easy setup using environment variables or a `.env` file.
 
 ```mermaid
-graph TD
-    A([User Accesses Web App\nhttp://host:port/]) --> B{Render Index Page\n(index.html)}:::viewClass
-
-    B --> C[/User Fills Form:\n- Select Platforms\n- Enter Usernames\n- Enter Query\n- Check Auto-Save/]:::inputClass
-
-    C --> D{Submit Form\n(POST to /)}:::actionClass
-
-    D --> E{{Flask Route Handler\n(app.py: index())}}:::flaskClass
-    E --> F{Validate Input}:::decisionClass
-
-    F -->|Invalid| G([Flash Error Message]):::errorClass
-    G --> B
-
-    F -->|Valid| H([Call analyser.analyse(\n platforms_to_query,\n query\n)]):::coreClass
-
-    subgraph Core_Analysis [SocialOSINTLM Core Logic]
-        direction TB
-        H --> I{Loop Platforms/Users}:::loopClass
-        I --> J{Cache Check}:::cacheClass
-        J -->|Valid Cache| L([Load Cached Data]):::cacheClass
-        J -->|No/Expired Cache| K([Fetch Platform Data\n(e.g., fetch_twitter)]):::apiClass
-
-        subgraph API_Handling [API & Rate Limit Handling]
-            direction TB
-            K --> K1{Rate Limited?}:::errorDecision
-            K1 -->|Yes| K2([Handle Rate Limit\nRaise RateLimitExceededError]):::errorClass
-            K1 -->|No| K3([Process Data\nExtract Text/Media URLs]):::dataClass
-            K3 --> K4([Download/Analyze Media]):::mediaClass
-            K4 --> K5([Save to Cache]):::cacheClass
-        end
-
-        K2 --> MAbort([Abort User Request]):::errorClass
-        K5 --> L
-
-        L --> N([Format Text Summary]):::textClass
-        N --> I
-
-        I --> O([Combine All Data\n(Text Summaries, Media Analyses)]):::dataClass
-        O --> P([Call Analysis LLM]):::llmClass
-        P --> Q([Return Report String]):::coreClass
-    end
-
-    MAbort --> R([Catch Exception in Flask]):::flaskClass
-
-    Q --> R
-
-    R --> S{Analysis Successful?}:::decisionClass
-    S -->|Yes| T([Render Report Page\n(report.html)]):::viewClass
-    S -->|No (Error/RateLimit)| U([Flash Error Message]):::errorClass
-    U --> B
-
-
-    T --> V{Auto-Save Checked?}:::decisionClass
-    V -->|Yes| W([Save Report to Disk\n(data/outputs/)]):::outputClass
-    V -->|No| X([Display Report Page]):::viewClass
-    W --> X
-
-    X --> Y[/User Views Report\nOptions: Copy MD, Download MD/]:::viewClass
-    Y --> Z([User Navigates Away or\nStarts New Analysis])
-
-
-    %% Styling
-    classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px
-    classDef viewClass fill:#e0f7fa,stroke:#00796b,stroke-width:2px
-    classDef inputClass fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
-    classDef actionClass fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px
-    classDef flaskClass fill:#c5cae9,stroke:#3f51b5,stroke-width:2px
-    classDef decisionClass fill:#fffde7,stroke:#f57f17,stroke-width:2px
-    classDef errorDecision fill:#ffcdd2,stroke:#b71c1c,stroke-width:2px
-    classDef coreClass fill:#d1c4e9,stroke:#5e35b1,stroke-width:2px
-    classDef loopClass fill:#e1bee7,stroke:#8e24aa,stroke-width:2px
-    classDef cacheClass fill:#b2ebf2,stroke:#00acc1,stroke-width:2px
-    classDef apiClass fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
-    classDef dataClass fill:#a5d6a7,stroke:#2e7d32,stroke-width:2px
-    classDef mediaClass fill:#f8bbd0,stroke:#c2185b,stroke-width:2px
-    classDef textClass fill:#bbdefb,stroke:#1976d2,stroke-width:2px
-    classDef llmClass fill:#ffcc80,stroke:#f57c00,stroke-width:2px
-    classDef errorClass fill:#ffab91,stroke:#d84315,stroke-width:2px
-    classDef outputClass fill:#f0f4c3,stroke:#afb42b,stroke-width:2px
+flowchart TD
+   A([Start]) --> AA[Setup]
+   AA --> B{Mode?}
+   B -->|Interactive| C[Menu]
+   C --> SelTarget["Select Target(s)"]
+   SelTarget --> H[Enter Analysis Loop]
+   H --> I{Input?}
+   I -->|exit| Z1[End]
+   I -->|refresh| Y[Refresh Cache]
+   Y --> H
+   I -->|help| Help[Display Help]
+   Help --> H
+   I -->|Query| J_CLI[Trigger Analysis]
+   
+   B -->|Stdin| F[Parse JSON]
+   F --> G[Extract Targets/Query]
+   G --> J_Stdin[Trigger Analysis]
+   
+   B -->|Web UI| W1[Start Server]
+   W1 --> W2[Handle Request]
+   W2 --> W3{Route?}
+   W3 -->|GET /| W4[Render Index]
+   W4 --> W2
+   W3 -->|POST /download| W10[Generate Download]
+   W10 --> W2
+   W3 -->|POST /| W5[Parse Form]
+   W5 --> J_Web[Trigger Analysis]
+   
+   J_CLI --> J[Run Analysis]
+   J_Stdin --> J
+   J_Web --> J
+   
+   J --> CollectData
+   CollectData --> StartFetch
+   
+   StartFetch --> K{Cache Valid?}
+   K -->|Yes| M[Load Cache]
+   K -->|No| FetchAPI[Fetch API]
+   FetchAPI --> RLE{Rate Limit?}
+   RLE -->|Yes| HandleRLE
+   HandleRLE --> FetchAPI
+   RLE -->|No| HandleMedia
+   HandleMedia --> CacheNew
+   CacheNew --> M
+   M --> ReturnData[Return Data]
+   
+   ReturnData --> PrepPrompt
+   PrepPrompt --> U[Call LLM]
+   U -->|Success| V_Result[Format Results]
+   U -->|Error| LLMErr[Handle Error]
+   LLMErr --> V_Result
+   
+   V_Result --> Out{Output Mode}
+   Out -->|CLI| HandleOutputCLI[Handle Output Display/Save]
+   HandleOutputCLI --> H
+   Out -->|Stdin| HandleOutputStdin[Handle Output Save/Stdout]
+   HandleOutputStdin --> Z2[End]
+   Out -->|Web| HandleOutputWeb[Handle Output Render/Save]
+   HandleOutputWeb --> W2
 ```
-
 ## 🛠 Installation
 
 ### Prerequisites
